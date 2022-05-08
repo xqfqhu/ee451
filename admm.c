@@ -4,6 +4,8 @@
 #include <mpi.h>
 #include<gsl/gsl_vector.h>
 #include<gsl/gsl_matrix.h>
+#include <gsl/gsl_blas.h>
+
 
 #define BUFFER_SIZE 2000
 #define LOCAL_DATA_SIZE 2000
@@ -11,6 +13,9 @@
 #define MAX_ITER 50
 #define CLASS_SIZE 6
 #define lambda 0.5
+#define rho 1.0
+
+void soft_threshold(gsl_matrix * a, double k);
 
 int main(int argc, char *argv[]){
     int npes, myrank;
@@ -23,37 +28,37 @@ int main(int argc, char *argv[]){
     MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &npes);  // total number of processes
 	MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
-
+    fprintf(stdout, "myrank: %d\n", myrank);
     gsl_matrix *A = gsl_matrix_calloc(LOCAL_DATA_SIZE, PARAMETER_SIZE);
     gsl_matrix *b = gsl_matrix_calloc(LOCAL_DATA_SIZE, CLASS_SIZE);
-    gsl_matrix *x = gsl_maxtrix_calloc(PARAMETER_SIZE, CLASS_SIZE);
-    gsl_matrix *z = gsl_maxtrix_calloc(PARAMETER_SIZE, CLASS_SIZE);
-    gsl_matrix *u = gsl_maxtrix_calloc(PARAMETER_SIZE, CLASS_SIZE);
-    gsl_matrix *u_hat = gsl_maxtrix_calloc(PARAMETER_SIZE, CLASS_SIZE);
-    gsl_matrix *x_hat = gsl_maxtrix_calloc(PARAMETER_SIZE, CLASS_SIZE);
-    gsl_matrix *x_u = gsl_maxtrix_calloc(PARAMETER_SIZE, CLASS_SIZE);
+    gsl_matrix *x = gsl_matrix_calloc(PARAMETER_SIZE, CLASS_SIZE);
+    gsl_matrix *z = gsl_matrix_calloc(PARAMETER_SIZE, CLASS_SIZE);
+    gsl_matrix *u = gsl_matrix_calloc(PARAMETER_SIZE, CLASS_SIZE);
+    gsl_matrix *u_hat = gsl_matrix_calloc(PARAMETER_SIZE, CLASS_SIZE);
+    gsl_matrix *x_hat = gsl_matrix_calloc(PARAMETER_SIZE, CLASS_SIZE);
+    gsl_matrix *x_u = gsl_matrix_calloc(PARAMETER_SIZE, CLASS_SIZE);
     gsl_matrix * ATA_rho = gsl_matrix_calloc(PARAMETER_SIZE, PARAMETER_SIZE);
     
 
-    /* read in local data */
-    fp = fopen("A.txt", "r");
-    for (int i = 0; i < LOCAL_DATA_SIZE; i++){
-        for (int j = 0; j < PARAMETER_SIZE; j++){
-            fscanf(fp, "%lf", &data);
-            gsl_matrix_set(A, i, j, data);
+    // /* read in local data */
+    // fp = fopen("A.txt", "r");
+    // for (int i = 0; i < LOCAL_DATA_SIZE; i++){
+    //     for (int j = 0; j < PARAMETER_SIZE; j++){
+    //         fscanf(fp, "%lf", &data);
+    //         gsl_matrix_set(A, i, j, data);
             
-        }
-    }
-    fclose(fp);
+    //     }
+    // }
+    // fclose(fp);
 
-    fp = fopen("b.txt", "r");
-    for (int i = 0; i < LOCAL_DATA_SIZE; i++){
-        for (int j = 0; j < CLASS_SIZE; j++){
-            fscanf(fp, "%lf", &data);
-            gsl_matrix_set(b, i, j, data);
-        }
-    }
-    fclose(fp);
+    // fp = fopen("b.txt", "r");
+    // for (int i = 0; i < LOCAL_DATA_SIZE; i++){
+    //     for (int j = 0; j < CLASS_SIZE; j++){
+    //         fscanf(fp, "%lf", &data);
+    //         gsl_matrix_set(b, i, j, data);
+    //     }
+    // }
+    // fclose(fp);
 
     /* precalc ATA_rho = A transpose * A + rho * I*/
     gsl_matrix_set_identity(ATA_rho);
@@ -82,24 +87,25 @@ int main(int argc, char *argv[]){
         gsl_matrix_scale(z, 1.0 / (double)npes);
         /* proximal operator */
         soft_threshold(z, lambda / ((double)npes * rho));
+        fprintf(stdout, "%d\n", itr);
     }
 
-    if (myrank == 0){
+    /* if (myrank == 0){
         fp = open("result.dat", "w");
         gsl_matrix_fprintf(fp, z, "%lf");
         fclose(fp);
-    }
+    } */
     MPI_Finalize();
 
 
-    gsl_matrix_free(A);
+   /*  gsl_matrix_free(A);
     gsl_matrix_free(x);
     gsl_matrix_free(z);
     gsl_matrix_free(u);
     gsl_matrix_free(u_hat);
     gsl_matrix_free(x_hat);
     gsl_matrix_free(x_u);
-    gsl_matrix_free(ATA_rho);
+    gsl_matrix_free(ATA_rho); */
 
     return 0;
 }
