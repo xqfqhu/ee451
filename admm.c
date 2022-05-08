@@ -11,7 +11,7 @@
 
 #define MINIBATCH_SIZE 6
 #define PARAMETER_SIZE 2700
-#define MAX_ITER 30000
+#define MAX_ITER 3000
 #define CLASS_SIZE 6
 #define lambda 0.5
 #define rho 1.0
