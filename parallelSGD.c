@@ -6,186 +6,23 @@
 #include<gsl/gsl_matrix.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_blas.h>
-//#include "mpi.h"
+#include "mpi.h"
+#include <time.h>
 int **X_tr;
 int *y_tr;
 
-int read_file(char *file,int classifier,int* s)
-{
-    int i;
-    FILE* in;
-    in = fopen(file,"rb");
-    if (!in){
-        return 0;
-    }else{
-        fseek(in,0,SEEK_END);
-        int len = ftell(in);
-        if(len >= 10000){
-            fseek(in,0, SEEK_SET);
-            char* buffer = (char*) malloc (len * sizeof(char));
-            fread(buffer,sizeof(char),len,in);
-            for (i = 0; i < 10000; i++){
-                X_tr[*s][i] = buffer[i];
-            }
-            y_tr[*s] = classifier;
-            *s = *s + 1;
-            free(buffer);
-        }
-        return 1;
-    }
-}
-
-#define num 2//13986
-#define large 2//22500
+#define num 13986
+#define large 2700
 #define class_size 6
 
 int main(int argc, char** argv){
-    int* y = (int*) malloc (class_size*sizeof(int));
-    for (int i=0;i<class_size;i++){
-        y[i] = i;
-    }
-    
-//    MPI_Init(&argc,&argv);
-//    int size, rank;
-//    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
-//    MPI_Comm_size(MPI_COMM_WORLD,&size);
-    
-//    if (rank == 0){
-    
-//    X_tr = (int**) malloc (sizeof(int*) * num);
-//    for (int i = 0; i < num; i++){
-//        X_tr[i] = (int*) malloc(sizeof(int*)*10000);
-//    }
-//    y_tr = (int*) malloc(sizeof(int)* num);
-//    //read training_data
-//    int s = 0;
-//    for(int i = 0;i < 6;i++){
-//        DIR *d;
-//        struct dirent *dir;
-//        char name[30] ;
-//        switch(i){
-//            case 0:
-//                strcpy(name, "./seg_train/buildings");
-//                d = opendir(name);
-//                if (d) {
-//                    while ((dir = readdir(d)) != NULL) {
-//                        if (strlen(dir->d_name)>=5){
-//                            //printf("%s\n", dir->d_name);
-//                            char file1[50],file2[10];
-//                            strcpy(file1, name);
-//                            strcpy(file2,dir->d_name);
-//                            strcat(file1,"/");
-//                            strcat(file1,file2);
-//                            read_file(file1,i,&s);
-//
-//                        }
-//                    }
-//                }
-//                closedir(d);
-//                break;
-//            case 1:
-//                strcpy(name, "./seg_train/forest");
-//                d = opendir(name);
-//                if (d) {
-//                    while ((dir = readdir(d)) != NULL) {
-//                        if (strlen(dir->d_name)>=4){
-//                            //printf("%s\n", dir->d_name);
-//                            FILE* in;
-//                            char file1[60],file2[30];
-//                            strcpy(file1, name);
-//                            strcpy(file2,dir->d_name);
-//                            strcat(file1,"/");
-//                            strcat(file1,file2);
-//                            read_file(file1,i,&s);
-//                        }
-//                    }
-//
-//                }
-//                closedir(d);
-//                break;
-//            case 2:
-//                strcpy(name, "./seg_train/glacier");
-//                d = opendir(name);
-//                if (d) {
-//                    while ((dir = readdir(d)) != NULL) {
-//                        if (dir->d_name != "." && dir->d_name != ".."){
-//                            //printf("%s\n", dir->d_name);
-//                            FILE* in;
-//                            char file1[50],file2[30];
-//                            strcpy(file1, name);
-//                            strcpy(file2,dir->d_name);
-//                            strcat(file1,"/");
-//                            strcat(file1,file2);
-//                            read_file(file1,i,&s);
-//                        }
-//                    }
-//
-//                }
-//                closedir(d);
-//                break;
-//            case 3:
-//                strcpy(name, "./seg_train/mountain");
-//                d = opendir(name);
-//                if (d) {
-//                    while ((dir = readdir(d)) != NULL) {
-//                        if (dir->d_name != "." && dir->d_name != ".."){
-//                            //printf("%s\n", dir->d_name);
-//                            FILE* in;
-//                            char file1[50],file2[30];
-//                            strcpy(file1, name);
-//                            strcpy(file2,dir->d_name);
-//                            strcat(file1,"/");
-//                            strcat(file1,file2);
-//                            read_file(file1,i,&s);
-//                        }
-//                    }
-//
-//                }
-//                closedir(d);
-//                break;
-//            case 4:
-//                strcpy(name, "./seg_train/sea");
-//                d = opendir(name);
-//                if (d) {
-//                    while ((dir = readdir(d)) != NULL) {
-//                        if (dir->d_name != "." && dir->d_name != ".."){
-//                            //printf("%s\n", dir->d_name);
-//                            FILE* in;
-//                            char file1[50],file2[30];
-//                            strcpy(file1, name);
-//                            strcpy(file2,dir->d_name);
-//                            strcat(file1,"/");
-//                            strcat(file1,file2);
-//                            read_file(file1,i,&s);
-//                        }
-//                    }
-//
-//                }
-//                closedir(d);
-//                break;
-//            case 5:
-//                strcpy(name, "./seg_train/street");
-//                d = opendir(name);
-//                if (d) {
-//                    while ((dir = readdir(d)) != NULL) {
-//                        if (dir->d_name != "." && dir->d_name != ".."){
-//                            //printf("%s\n", dir->d_name);
-//                            FILE* in;
-//                            char file1[50],file2[30];
-//                            strcpy(file1, name);
-//                            strcpy(file2,dir->d_name);
-//                            strcat(file1,"/");
-//                            strcat(file1,file2);
-//                            read_file(file1,i,&s);
-//                        }
-//                    }
-//
-//                }
-//                closedir(d);
-//                break;
-//        }
-//
-//    }
+    struct timespec start, stop;
+    double time;
+    if( clock_gettime(CLOCK_REALTIME, &start) == -1) { perror("clock gettime");}
+    MPI_Init(&argc,&argv);
+    int size, rank;
+    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    MPI_Comm_size(MPI_COMM_WORLD,&size);
     
     
     
@@ -195,7 +32,7 @@ int main(int argc, char** argv){
     gsl_matrix *y_tr = gsl_matrix_calloc(num, 1);
     int data;
     FILE* in;
-    in = fopen("a.txt","rb");
+    in = fopen("Xtrain.txt","rb");
     if (!in){
         return 0;
     }else{
@@ -222,7 +59,7 @@ int main(int argc, char** argv){
 //    for (int i = 0; i< num; i++)
 //        for (int j = 0; j < large; j++)
 //            printf("%g", gsl_matrix_get(X_tr,i,j));
-    in = fopen("b.txt","rb");
+    in = fopen("Ytrain.txt","rb");
     if (!in){
         return 0;
     }else{
@@ -249,13 +86,15 @@ int main(int argc, char** argv){
     for (int i = 0; i < large; i++){
         random_value = rand()%256 * 1.0;
         gsl_matrix_set(w, i, 0, random_value);
-        printf("%f \n",gsl_matrix_get(w,i,0));
+        //printf("%f \n",gsl_matrix_get(w,i,0));
     }
     gsl_matrix *b = gsl_matrix_calloc(1, 1);
     random_value = rand()%256 * 1.0;
     gsl_matrix_set(b, 0, 0, random_value);
     gsl_matrix *lw = gsl_matrix_calloc(large, 1);;
     gsl_matrix *lb = gsl_matrix_calloc(1, 1);
+    gsl_matrix *lww = gsl_matrix_calloc(large, 1);;
+    gsl_matrix *lbb = gsl_matrix_calloc(1, 1);
     
 //    float b = rand()/100;
     float lr = 0.0002;
@@ -268,7 +107,9 @@ int main(int argc, char** argv){
         gsl_matrix_set(lb,0,0,0.0);
         gsl_matrix *y_pred = gsl_matrix_calloc(num, 1);
         double loss = 0;
-        for (int i = 0; i < num; i++){
+        int startIndex = num/size * (rank);
+        int endIndex = num/size * (rank+1);
+        for (int i = startIndex; i < endIndex; i++){
             double ytr = gsl_matrix_get(y_tr, i, 0);
             double Xdot = 0.0;
             gsl_matrix *X_part2 = gsl_matrix_calloc(1,large);
@@ -282,42 +123,54 @@ int main(int argc, char** argv){
             }
             ytr = ytr - Xdot - gsl_matrix_get(b,0,0);
             gsl_matrix_scale(X_part3, -2.0*ytr);
-            gsl_matrix_add(lw, X_part3);
+            gsl_matrix_add(lww, X_part3);
             
-            gsl_matrix_set(lb,0,0,gsl_matrix_get(lb,0,0) -2*ytr);
+            gsl_matrix_set(lbb,0,0,gsl_matrix_get(lbb,0,0) -2*ytr);
+            gsl_matrix_free(X_part2);
+            gsl_matrix_free(X_part3);
         }
-            gsl_matrix_scale(lw, lr);
+        MPI_Allreduce(lww->data, lw->data, large, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(lbb->data, lb->data, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        gsl_matrix_scale(lw, lr);
 //            for (int j = 0;j<large;j++)
 //                printf("lw: %f\n",gsl_matrix_get(lw,j,0));
-            gsl_matrix_sub(w,lw);
+        gsl_matrix_sub(w,lw);
 //            for (int j = 0;j<large;j++)
 //                printf("w: %f\n",gsl_matrix_get(w,j,0));
-            gsl_matrix_scale(lb, lr);
-            gsl_matrix_sub(b,lb);
-            //printf("%f %f %f %f\n", ytr, Xdot, gsl_matrix_get(w,0,0),gsl_matrix_get(w,1,0));
-            double y_predicted = 0.0;
+        gsl_matrix_scale(lb, lr);
+        gsl_matrix_sub(b,lb);
+        //printf("%f %f %f %f\n", ytr, Xdot, gsl_matrix_get(w,0,0),gsl_matrix_get(w,1,0));
+        double y_predicted = 0.0;
         for (int i = 0; i< num; i++){
             for (int j = 0; j< large; j++)
                 y_predicted += gsl_matrix_get(X_tr, i, j) * gsl_matrix_get(w,j,0);
             y_predicted += gsl_matrix_get(b,0,0);
-//            printf("%f ", y_predicted);
+    //            printf("%f ", y_predicted);
             gsl_matrix_set(y_pred,i,0,y_predicted);
         }
         for (int i = 0; i< num; i++){
             loss = (gsl_matrix_get(y_pred,i,0)-gsl_matrix_get(y_tr,i,0)) * (gsl_matrix_get(y_pred,i,0)-gsl_matrix_get(y_tr,i,0));
         }
         loss = loss / large;
-        printf("Epoch: %d, Loss: %.3f\n",epoch, loss);
+        //printf("Epoch: %d, Loss: %.3f\n",epoch, loss);
         epoch+=1;
         lr = lr/divideby;
+        gsl_matrix_free(y_pred);
    }
-    for (int i = 0; i< large;i++){
-        float d =  gsl_matrix_get(w, i, 0);
-        printf("%f ",d);
-    }
-    printf("%f", gsl_matrix_get(b,0,0));
+//    for (int i = 0; i< large;i++){
+//        float d =  gsl_matrix_get(w, i, 0);
+//        printf("%f ",d);
+//    }
+//    printf("%f", gsl_matrix_get(b,0,0));
 //        return w,b
-    
+    gsl_matrix_free(X_tr);
+    gsl_matrix_free(y_tr);
+    gsl_matrix_free(w);
+    gsl_matrix_free(b);
+    gsl_matrix_free(lw);
+    gsl_matrix_free(lb);
+    gsl_matrix_free(lww);
+    gsl_matrix_free(lbb);
     
     
     
@@ -339,10 +192,12 @@ int main(int argc, char** argv){
 //    fseek(in2,0, SEEK_SET);
 //    fread(a2,sizeof(char),len2,in2);
 //    printf("%d ",len2);
-    
+    if( clock_gettime( CLOCK_REALTIME, &stop) == -1 ) { perror("clock gettime");}
+    time = (stop.tv_sec - start.tv_sec)+ (double)(stop.tv_nsec - start.tv_nsec)/1e9;
+    printf("Number of image fed into the classifier = %d Execution time = %f sec,\n", num * n_epochs, time);
     
 //
-//    MPI_Finalize();
+    MPI_Finalize();
     
     return 0;
 }
