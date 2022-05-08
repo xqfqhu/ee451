@@ -24,8 +24,8 @@ int main(int argc, char *argv[]){
     FILE * fp;
     char * tok;
     double data;
-    char filename_a[] = "Train/x1.dat";
-    char filename_b[] = "Train/y1.dat";
+    char filename_a[] = "data/x1.dat";
+    char filename_b[] = "data/y1.dat";
     int m;
     int n;
     struct timespec start, stop; 
