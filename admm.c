@@ -34,8 +34,8 @@ int main(int argc, char *argv[]){
     MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &npes);  // total number of processes
 	MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
-    filename_a[7] += myrank;
-    filename_b[7] += myrank;
+    filename_a[6] += myrank;
+    filename_b[6] += myrank;
     
     gsl_matrix *A = gsl_matrix_calloc(MINIBATCH_SIZE, PARAMETER_SIZE);
     gsl_matrix *b = gsl_matrix_calloc(MINIBATCH_SIZE, CLASS_SIZE);
