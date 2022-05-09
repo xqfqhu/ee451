@@ -32,7 +32,7 @@ int main(int argc, char** argv){
     gsl_matrix *y_tr = gsl_matrix_calloc(num, 1);
     int data;
     FILE* in;
-    in = fopen("Xtrain.txt","rb");
+    in = fopen("./data/Xtrain.txt","rb");
     if (!in){
         return 0;
     }else{
@@ -59,7 +59,7 @@ int main(int argc, char** argv){
 //    for (int i = 0; i< num; i++)
 //        for (int j = 0; j < large; j++)
 //            printf("%g", gsl_matrix_get(X_tr,i,j));
-    in = fopen("Ytrain.txt","rb");
+    in = fopen("./data/Ytrain.txt","rb");
     if (!in){
         return 0;
     }else{
@@ -95,7 +95,13 @@ int main(int argc, char** argv){
     gsl_matrix *lb = gsl_matrix_calloc(1, 1);
     gsl_matrix *lww = gsl_matrix_calloc(large, 1);;
     gsl_matrix *lbb = gsl_matrix_calloc(1, 1);
-    
+    int data_size = num / size;
+    gsl_matrix *shuffle_data = gsl_matrix_calloc(data_size, size);
+    for (int i = 0; i < data_size; i++)
+        for (int j = 0; j < size; j++){
+            random_value = rand()%num;
+            gsl_matrix_set(shuffle_data, i, j, random_value);
+        }
 //    float b = rand()/100;
     float lr = 0.0002;
     int epoch = 1;
@@ -107,16 +113,15 @@ int main(int argc, char** argv){
         gsl_matrix_set(lb,0,0,0.0);
         gsl_matrix *y_pred = gsl_matrix_calloc(num, 1);
         double loss = 0;
-        int startIndex = num/size * (rank);
-        int endIndex = num/size * (rank+1);
-        for (int i = startIndex; i < endIndex; i++){
-            double ytr = gsl_matrix_get(y_tr, i, 0);
+        for (int i = 0; i < data_size; i++){
+            int i_prime = gsl_matrix_get(shuffle_data, i, rank);
+            double ytr = gsl_matrix_get(y_tr, i_prime, 0);
             double Xdot = 0.0;
             gsl_matrix *X_part2 = gsl_matrix_calloc(1,large);
             gsl_matrix *X_part3 = gsl_matrix_calloc(large,1);
             for (int j = 0; j < large;j++){
-                gsl_matrix_set(X_part2,0,j,gsl_matrix_get(X_tr,i,j));
-                gsl_matrix_set(X_part3,j,0,gsl_matrix_get(X_tr,i,j));
+                gsl_matrix_set(X_part2,0,j,gsl_matrix_get(X_tr,i_prime,j));
+                gsl_matrix_set(X_part3,j,0,gsl_matrix_get(X_tr,i_prime,j));
             }
             for (int j = 0; j < large; j++){
                 Xdot += gsl_matrix_get(X_part2,0,j) * gsl_matrix_get(w,j,0);
